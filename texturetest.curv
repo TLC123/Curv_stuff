@@ -1,0 +1,10 @@
+let 
+  include file "Textures.curv";
+   
+ in   
+ row 5(
+demoshape >>   (texture ( i_mm_graph_paper 0.1  , colour_pair( Red,White) )  )
+,demoshape >>   (texture ( i_checker 1, colour_pair( Red,White) )  )
+,demoshape >>   (texture ( i_polkadot 2  , colour_pair( Red,White) )  )
+ )
+                 

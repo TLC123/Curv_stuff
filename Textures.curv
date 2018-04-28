@@ -1,0 +1,92 @@
+// Textures v0.01
+ 
+
+{
+  include file "X11colorNames.curv";
+ 
+// The demoshape
+//shape
+
+demoshape = union(
+difference(
+  
+sphere 7,
+union(
+sphere 7>>move(3,3,3),
+cube 3.9>>move(2,2,-2)
+ )
+) , 
+ cube.exact 1.96>>move(-1.5,-1.5,1.5),
+smooth 0.5 .intersection(
+cube.exact 2>>move(2,2,-2)>>offset 0.25 
+,sphere 6.5));
+//3D
+
+   // checker = ((x,y,z,t)->(
+    // sRGB(lerp(Black,White, checkerboard (x,y,z)))
+   // )); 
+    
+
+
+//2D
+ 
+//basepatterns
+  // checkerboard (x,y,z)=
+   // floor(mod(
+   // (floor(mod(x,2)))
+  // +(floor(mod(y,2)))
+  // +(floor(mod(z,2)))
+  // ,2));
+//i_fields
+
+ i_checker n(x,y,z,_) = 
+ floor(  mod((floor(mod(x/n,2)))+(floor(mod(y/n,2)))+(floor(mod(z/n,2))),2));
+ i_linearMaxXYZ d (x,y,z,_) =max( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 );
+ i_linearMinXYZ d (x,y,z,_) =min( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 );
+ i_linearCubeCell d (x,y,z,_) =min(abs(( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 )-(0.5,0.5,0.5)))*2;
+ i_linearSphereCell d (x,y,z,_) =clamp(0,1,mag( (( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 )-(0.5,0.5,0.5)))*2);
+ 
+ i_polkadot d (x,y,z,_) = 
+ let p=([x,y,z]/d `mod` 1) -(0.5,0.5,0.5);
+ pf=floor((x,y,z)/d);
+ vv=0.57;
+ vh=vv/2;
+ v=(vh,vh,vh);
+ in
+ step(0.75,
+ min(
+ mag(   (p  +(vv*vec3_at(pf +[ 0, 0, 0])-v))),
+ mag(   (p  +(vv*vec3_at(pf +[ 0, 0, 1])-v))-[ 0, 0, 1]),
+ mag(   (p  +(vv*vec3_at(pf +[ 0, 0,-1])-v))-[ 0, 0,-1]),
+ mag(   (p  +(vv*vec3_at(pf +[-1, 0, 0])-v))-[-1, 0, 0]),
+ mag(   (p  +(vv*vec3_at(pf +[ 1, 0, 0])-v))-[ 1, 0, 0]),
+ mag(   (p  +(vv*vec3_at(pf +[ 0,-1, 0])-v))-[ 0,-1, 0]),
+ mag(   (p  +(vv*vec3_at(pf +[ 0, 1, 0])-v))-[ 0, 1, 0]) 
+ // full 3*3*3 cube was to expensive
+  )*2
+ ) ;
+ 
+ // graph paper
+cm v = min(	(if(((v+0.25) `mod`10)<0.5) 0 else 1),	(if(((v+0.15) `mod` 5)<.3)0.15 else 1),	(if(((v+0.1)  `mod` 1)<.2)0.5 else 1));
+i_mm_graph_paper d (x,y,z,_) =let n=smoothstep(0,0.5,(abs(normalize(x,y,z))/3)) in min(cm(x/d) +n[X],cm(y/d)+n[Y],cm(z/d)+n[Z] )	;
+ 
+i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
+ 
+ 
+//cmaps 
+ colour_pair  (colour1,colour2)t= (lerp(colour1,colour2,t));
+
+ 
+
+//modifyers
+ //remap functions
+
+//helper functions
+
+   arandom (aseed) = mod(sin(dot((aseed,aseed), (12.9898,78.233)))*43758.5453123, 1);
+// value_at ((x,y,z),s) =arandom(arandom(arandom(x)+y)+z+s);
+vec3_at (x,y,z) = (arandom(arandom(arandom(x)+y)+z+2),arandom(arandom(arandom(x)+y)+z+5),arandom(arandom(arandom(x)+y)+z+9));
+step (a,v)= if (v<a)0 else 1;
+}
+
+ 
