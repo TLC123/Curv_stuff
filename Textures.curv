@@ -31,12 +31,12 @@ cube.exact 2>>move(2,2,-2)>>offset 0.25
 //2D
  
 //basepatterns
-  // checkerboard (x,y,z)=
-   // floor(mod(
-   // (floor(mod(x,2)))
-  // +(floor(mod(y,2)))
-  // +(floor(mod(z,2)))
-  // ,2));
+  checkerboard (x,y,z)=
+   floor(mod(
+   (floor(mod(x,2)))
+  +(floor(mod(y,2)))
+  +(floor(mod(z,2)))
+  ,2));
 //i_fields
 
  i_checker n(x,y,z,_) = 
@@ -66,6 +66,24 @@ cube.exact 2>>move(2,2,-2)>>offset 0.25
   )*2
  ) ;
  
+ 
+   i_uv    d (x,y,z,_) = 
+     let 	 
+	 p=(x,y,z)/d; 	 n=  normalize(p) ;
+	 vi=  normalize(	 n[Z]*(0,1,0)+ 	 n[X]*(0,0,1)+ 	 n[Y]*(1,0,0) 	 );
+	 vu=normalize(cross(n,vi));	 vv=normalize(cross(vu,n));
+	 u=cross(p,normalize(vu));	 v=cross(p,normalize(vv));
+	 outc= 	 checkerboard( v,u/5,u)  	 ;
+	 in outc;
+	 
+ i_spherical d (x,y,z,_) = (mag(x,y,z)*d) `mod` 1;
+
+i_polar d (x,y,z,_) = let n=normalize(x,y,z)in   step (0.25,min( 
+  abs(((atan2(n[Y],n[X])           /tau)*d*2 `mod` 1)-0.5)*2
+ ,abs(((atan2(n[Z],mag(n[X],n[Y])) /pi )*d `mod` 1)-0.5)*2
+ 
+ )`mod` 1 );
+ 
  // graph paper
 cm v = min(	(if(((v+0.25) `mod`10)<0.5) 0 else 1),	(if(((v+0.15) `mod` 5)<.3)0.15 else 1),	(if(((v+0.1)  `mod` 1)<.2)0.5 else 1));
 i_mm_graph_paper d (x,y,z,_) =let n=smoothstep(0,0.5,(abs(normalize(x,y,z))/3)) in min(cm(x/d) +n[X],cm(y/d)+n[Y],cm(z/d)+n[Z] )	;
@@ -75,10 +93,20 @@ i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
  
 //cmaps 
  colour_pair  (colour1,colour2)t= (lerp(colour1,colour2,t));
-
- 
+  
 
 //modifyers
+my_bump (r) shape =
+    make_shape {
+        dist p : shape.dist p - r*abs (smoothstep(0,2,mag(shape.colour p))),
+        colour p : shape.colour p,
+        bbox : [shape.bbox[MIN]-r, shape.bbox[MAX]+r],
+        is_2d : shape.is_2d,
+        is_3d : shape.is_3d };
+
+
+
+
  //remap functions
 
 //helper functions
