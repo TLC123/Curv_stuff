@@ -43,28 +43,14 @@ cube.exact 2>>move(2,2,-2)>>offset 0.25
  floor(  mod((floor(mod(x/n,2)))+(floor(mod(y/n,2)))+(floor(mod(z/n,2))),2));
  i_linearMaxXYZ d (x,y,z,_) =max( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 );
  i_linearMinXYZ d (x,y,z,_) =min( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 );
- i_linearCubeCell d (x,y,z,_) =min(abs(( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 )-(0.5,0.5,0.5)))*2;
+ i_Cell d (x,y,z,_) = smin3(abs(( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 )-(0.5,0.5,0.5))*2 ,0.65);
+    smin3(v,k) =        smin2(  smin2(v[0],v[1],k),v[2],k);
+		smin2(a,b,k) =          let h = clamp( 0.5+0.5*(b-a)/k, 0, 1 );
+        in lerp( b, a, h ) - k*h*(1.0-h);
+		
  i_linearSphereCell d (x,y,z,_) =clamp(0,1,mag( (( x/d `mod` 1, y/d `mod` 1, z/d `mod` 1 )-(0.5,0.5,0.5)))*2);
  
- i_polkadot d (x,y,z,_) = 
- let p=([x,y,z]/d `mod` 1) -(0.5,0.5,0.5);
- pf=floor((x,y,z)/d);
- vv=0.57;
- vh=vv/2;
- v=(vh,vh,vh);
- in
- step(0.75,
- min(
- mag(   (p  +(vv*vec3_at(pf +[ 0, 0, 0])-v))),
- mag(   (p  +(vv*vec3_at(pf +[ 0, 0, 1])-v))-[ 0, 0, 1]),
- mag(   (p  +(vv*vec3_at(pf +[ 0, 0,-1])-v))-[ 0, 0,-1]),
- mag(   (p  +(vv*vec3_at(pf +[-1, 0, 0])-v))-[-1, 0, 0]),
- mag(   (p  +(vv*vec3_at(pf +[ 1, 0, 0])-v))-[ 1, 0, 0]),
- mag(   (p  +(vv*vec3_at(pf +[ 0,-1, 0])-v))-[ 0,-1, 0]),
- mag(   (p  +(vv*vec3_at(pf +[ 0, 1, 0])-v))-[ 0, 1, 0]) 
- // full 3*3*3 cube was to expensive
-  )*2
- ) ;
+
  
  
    i_uv    d (x,y,z,_) = 
@@ -91,9 +77,133 @@ i_mm_graph_paper d (x,y,z,_) =let n=smoothstep(0,0.5,(abs(normalize(x,y,z))/3)) 
 i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
  
  
+///////////////////////////////////////////////////
+ i_polkadot texture_scale fill irregular (x,y,z,_) = 
+ let p=([x,y,z]/texture_scale `mod` 1) -(0.5,0.5,0.5);
+
+ pf=floor((x,y,z)/texture_scale);
+ vv=irregular;
+ vh=vv/2;
+ v=(vh,vh,vh);
+ in
+ step(fill,
+ sqrt(min(
+  magsq(  let o=[-1,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+
+  magsq(  let o=[-1,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+
+  magsq(  let o=[-1,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o)
+  
+   ))*2
+ ) ;   
+  magsq (p)=dot(p,p); 
+///////////////////////////////////////////////////
+   ////////////////////////
+   i_dotmixa texture_scale fill irregular (x,y,z,_) = 
+ let p=([x,y,z]/texture_scale `mod` 1) -(0.5,0.5,0.5);
+
+ pf=floor((x,y,z)/texture_scale);
+ vv=irregular;
+ vh=vv/2;
+ v=(vh,vh,vh);
+ in
+ smoothstep(0,1,
+ sqrt(  min(
+  magsq(  let o=[-1,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o),
+  magsq(  let o=[ 0,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1,-1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+
+  magsq(  let o=[-1,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1, 0] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+
+  magsq(  let o=[-1,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1,-1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 0, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[-1, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 0, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o), 
+  magsq(  let o=[ 1, 1, 1] in   (p  +(vv*vec3_at(pf +o)-v -shiftifodd(pf+o)))-o)
+  
+   ))
+ ) ; 
+   ////////////////////////
+   i_dotmixter texture_scale fill irregular (x,y,z,_) = 
+ let 
+ porg=(x,y,z);
+ p=([x,y,z]/texture_scale `mod` 1) -(0.5,0.5,0.5);
+
+ vv=irregular;
+ vh=vv/2;
+ v=(vh,vh,vh); pf=floor((x,y,z)/texture_scale)-v;
+
+ in
+ smoothstep(0,1,
+ sqrt(  min(
+  magsq(  let o=[0,0,0] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[1,0,0] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[1,1,0] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[0,1,0] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[0,0,1] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[1,0,1] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[1,1,1] in   (p-(o+vv*vec3_at(pf +o )-v))),
+  magsq(  let o=[0,1,1] in   (p-(o+vv*vec3_at(pf +o )-v)))
+  
+  
+   ))
+ ) ;  
+  /////////////////////////////////////////
 //cmaps 
  colour_pair  (colour1,colour2)t= (lerp(colour1,colour2,t));
-  
+ colour_trine  (colour1,colour2,colour3)t=let T=t*3 in 
+ if(T<1) (lerp(colour1,colour2,mod(T,1))) else 
+ if(T<2) (lerp(colour2,colour3,mod(T,1))) else 
+         (lerp(colour3,colour1,mod(T,1)))  
+ ;
+   colour_tetrad  (colour1,colour2,colour3,colour4)t=let T=t*4 in 
+ if(T<1) (lerp(colour1,colour2,mod(T,1))) else 
+ if(T<2) (lerp(colour2,colour3,mod(T,1))) else 
+ if(T<3) (lerp(colour3,colour4,mod(T,1))) else 
+         (lerp(colour4,colour1,mod(T,1)))  
+ ;
 
 //modifyers
 my_bump (r) shape =
@@ -110,10 +220,27 @@ my_bump (r) shape =
  //remap functions
 
 //helper functions
+sgn(x)=if(x<0)-1 else 1;
+//   arandom (aseed) = mod(sin(dot((aseed,aseed), (12.9898,78.233)))*43758.5453123, 1);
+   arandom (aseed) =  mod(aseed*43758.5453123, 1);
 
-   arandom (aseed) = mod(sin(dot((aseed,aseed), (12.9898,78.233)))*43758.5453123, 1);
-// value_at ((x,y,z),s) =arandom(arandom(arandom(x)+y)+z+s);
-vec3_at (x,y,z) = (arandom(arandom(arandom(x)+y)+z+2),arandom(arandom(arandom(x)+y)+z+5),arandom(arandom(arandom(x)+y)+z+9));
+   // value_at ((x,y,z),s) =arandom(arandom(arandom(x)+y)+z+s);
+vec3_at (x,y,z) =
+(
+arandom(arandom(arandom(x)+y)+z+2),
+arandom(arandom(arandom(x)+y)+z+5),
+arandom(arandom(arandom(x)+y)+z+9)
+);
+shiftifodd(x,y,z)=let 
+shiftx=if( abs(  mod(x,2))==1) 1/3 else 0; 
+shifty=if( abs(  mod(y,2))==1) -0.5 else 0; 
+shiftz=if( abs(  mod(z,2))==1) 1/3 else 0; 
+
+in 
+(0,shiftx,shiftx)+
+//(shifty,0,shifty)
+(shiftz,0,0)
+;
 step (a,v)= if (v<a)0 else 1;
 }
 
