@@ -1,85 +1,6 @@
 let 
   include file "Textures.curv";
-  i_scale  d (f)(x,y,z,t) = let   p=(x/d,y/d,z/d, t) ;in f(p);
-  i_swirl u (f)(x,y,z,t) = 
-// odn (x)=
-  let 
- 
-				tp=(x,y,z);
-                g=u * 1.623 ; 			
-			    gs=u*1.323  ;
-				gr=u*0.6 ;
-				a=(sin(x)+sin(y)+sin(z ))*gr;
-                axis1=normalize(cos(x/g),sin(y/g),sin(z/g));
-                p1=     tp 
-				// * cos(a)
-                    // - cross(axis1, tp) * sin(a)
-                    // + axis1 * dot(axis1, tp * (1 - cos a))/1
-					;
-		        
-				a2=(cos(p1[X])+cos(p1[Y])+cos(p1[Z] )) *(gr/4);
-                axis2=normalize(sin(p1[X]*g),cos(p1[Y]*g),cos((p1[Z]+p1[Y])*g)); 
-				p2=     p1 
-				// * cos(a2)
-                    // - cross(axis2, p1) * sin(a2)
-                    // + axis2 * dot(axis2, p1 * (1 - cos a2))/1
-					;	
-  
-				a3=(sin(p2[X])+sin(p2[Y])+sin(p2[Z]))*g;
-                axis3=normalize(cos(p2[X]/g),sin(p2[Y]/g),sin(p2[Z]/g));
-                p3=     p2  + axis3*a3;  
-				
-				a4=(cos(p3[X])+cos(p3[Y])+cos(p3[Z])) *(g/4);
-                axis4=normalize(sin(p3[X]*g),cos(p3[Y]*g),cos((p3[Z]+p3[Y])*g)); 
-				p4=     p3 +axis4 *a4; 
- 			 
-		        a5=(sin(p4[X])+sin(p4[Y])+sin(p4[Z]))*gs;
-                axis5=normalize(cos(p4[X]/g),sin(p4[Y]/g),sin(p4[Z]/g));
-                p5=     cross(p4  , axis5*a5);  
-				
-				a6=(cos(p5[X])+cos(p5[Y])+cos(p5[Z])) *(gs/4);
-                axis6=normalize(sin(p5[X]*g),cos(p5[Y]*g),cos((p5[Z]+p1[Y])*g)); 
-				p6=     cross(p5  , axis6*a6); 
-
- 				outp=(p6[X],p6[Y],p6[Z] ,t);
-				in  f(outp)  ; 		
-				
-		i_turbulence u (f)(x,y,z,t) =
-		    let p=(x,y,z);
-			p6=p +( noise3d (p)  -(0.5,0.5,0.5))*u+( noise3d (p*4)  -(0.5,0.5,0.5))*u/4;
-      		outp=(p6[X],p6[Y],p6[Z] ,t);
-
-		    in  f(outp)  ; 
-				   
- noise3d(x,y,z) =
-
- let 
-
-	    px= floor (x);
-	    py= floor (y);
-	    pz= floor (z);
-		lbx= smoothstep(0,1,x-px);
-	    lby= smoothstep(0,1,y-py);
-	    lbz= smoothstep(0,1,z-pz);
-	    p0 = vec3_at (px,  py,  pz);
-        p1 = vec3_at (px+1,py,  pz);
-        p2 = vec3_at (px+1,py+1,pz);
-        p3 = vec3_at (px,  py+1,pz);
-		
-        p4 = vec3_at (px,  py,  pz+1);
-        p5 = vec3_at (px+1,py,  pz+1);
-        p6 = vec3_at (px+1,py+1,pz+1);
-        p7 = vec3_at (px,  py+1,pz+1);
-   	     
-		p01 =lerp(p0,p1,lbx);
-		p32 =lerp(p3,p2,lbx);
-    	p45 =lerp(p4,p5,lbx);
-		p76 =lerp(p7,p6,lbx);
-		p0132=lerp(p01,p32,lby);
-		p4576=lerp(p45,p76,lby);
-   c1=lerp(p0132,p4576,lbz);
-		
-    in     (c1);
+   
 				
 	
  in      
@@ -87,9 +8,12 @@ let
 // demoshape >>     (texture (  i_spherical 4 , colour_pair( LightGreen,red) )   )>>my_bump 0.15
 // demoshape >>     (texture (  i_polar 4 , colour_pair( LightGreen,red) )   )>>my_bump 0.15
 // demoshape >>   (texture ( i_mm_graph_paper 0.1  , colour_pair( Red,White) )  )
-
-demoshape >>   texture ( i_turbulence 14 ( i_checker 2 ) , colour_pair( Red,White) )    
-
+ 
+  union( 
+ demoshape >>colour  c_noise3d,
+half_space {d:-10, normal: (0,0,1)}  >>   texture ( i_turbulence 2.5 ( i_noise3d 2 ) , colour_trine( Green,DarkBrown,DarkGreen) )   
+  )
+ 
 // , demoshape >>   texture ( i_dotmixter 2 0.8 0, colour_tetrad( Brown,LightGreen,Green,SandyBrown) )  
   
-                   
+                       

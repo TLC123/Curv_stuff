@@ -1,5 +1,6 @@
 // Textures v0.01
  
+ 
 
 {
   include file "X11colorNames.curv";
@@ -70,11 +71,12 @@ i_polar d (x,y,z,_) = let n=normalize(x,y,z)in   step (0.25,min(
  
  )`mod` 1 );
  
- // graph paper
-cm v = min(	(if(((v+0.25) `mod`10)<0.5) 0 else 1),	(if(((v+0.15) `mod` 5)<.3)0.15 else 1),	(if(((v+0.1)  `mod` 1)<.2)0.5 else 1));
-i_mm_graph_paper d (x,y,z,_) =let n=smoothstep(0,0.5,(abs(normalize(x,y,z))/3)) in min(cm(x/d) +n[X],cm(y/d)+n[Y],cm(z/d)+n[Z] )	;
- 
-i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
+		 // graph paper
+		cm v = min(	(if(((v+0.25) `mod`10)<0.5) 0 else 1),	(if(((v+0.15) `mod` 5)<.3)0.15 else 1),	(if(((v+0.1)  `mod` 1)<.2)0.5 else 1));
+		i_mm_graph_paper d (x,y,z,_) =let n=smoothstep(0,0.5,(abs(normalize(x,y,z))/3)) in min(cm(x/d) +n[X],cm(y/d)+n[Y],cm(z/d)+n[Z] )	;
+		c_mm_graph_paper n (x,y,z,_) =    min(cm(x) +n[X],cm(y)+n[Y],cm(z)+n[Z] )	;
+		 
+		i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
  
  
 ///////////////////////////////////////////////////
@@ -122,6 +124,23 @@ i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
  ) ;   
   magsq (p)=dot(p,p); 
 ///////////////////////////////////////////////////
+  i_scale  d (f)(x,y,z,t) = let   p=(x/d,y/d,z/d, t) ;in f(p);
+
+///////////////////////////////////////////////////
+i_noise3d d (x,y,z,_)= (noise3d (x,y,z))[X];
+c_noise3d  (x,y,z,_)= sRGB(noise3d (x,y,z));
+
+ noise3d(x,y,z) = let 
+	    px= floor (x); 	    py= floor (y); 	    pz= floor (z);
+		lbx= smoothstep(0,1,x-px);	    lby= smoothstep(0,1,y-py);	    lbz= smoothstep(0,1,z-pz);
+	    p0 = vec3_at (px,  py,  pz);        p1 = vec3_at (px+1,py,  pz);
+        p2 = vec3_at (px+1,py+1,pz);        p3 = vec3_at (px,  py+1,pz);		
+        p4 = vec3_at (px,  py,  pz+1);        p5 = vec3_at (px+1,py,  pz+1);
+        p6 = vec3_at (px+1,py+1,pz+1);        p7 = vec3_at (px,  py+1,pz+1);   	     
+		p01 =lerp(p0,p1,lbx);		p32 =lerp(p3,p2,lbx);
+    	p45 =lerp(p4,p5,lbx);		p76 =lerp(p7,p6,lbx);
+		p0132=lerp(p01,p32,lby);		p4576=lerp(p45,p76,lby);   c1=lerp(p0132,p4576,lbz);
+		    in     (c1);
    ////////////////////////
    i_dotmixa texture_scale fill irregular (x,y,z,_) = 
  let p=([x,y,z]/texture_scale `mod` 1) -(0.5,0.5,0.5);
@@ -191,6 +210,58 @@ i_mm_graph_paper2d d (x,y,_,_) =  min(cm(x/d)  ,cm(y/d)  )	;
    ))
  ) ;  
   /////////////////////////////////////////
+i_swirl u (f)(x,y,z,t) = 
+// odn (x)=
+  let 
+ 
+				tp=(x,y,z);
+                g=u * 1.623 ; 			
+			    gs=u*1.323  ;
+				gr=u*0.6 ;
+				a=(sin(x)+sin(y)+sin(z ))*gr;
+                axis1=normalize(cos(x/g),sin(y/g),sin(z/g));
+                p1=     tp 
+				// * cos(a)
+                    // - cross(axis1, tp) * sin(a)
+                    // + axis1 * dot(axis1, tp * (1 - cos a))/1
+					;
+		        
+				a2=(cos(p1[X])+cos(p1[Y])+cos(p1[Z] )) *(gr/4);
+                axis2=normalize(sin(p1[X]*g),cos(p1[Y]*g),cos((p1[Z]+p1[Y])*g)); 
+				p2=     p1 
+				// * cos(a2)
+                    // - cross(axis2, p1) * sin(a2)
+                    // + axis2 * dot(axis2, p1 * (1 - cos a2))/1
+					;	
+  
+				a3=(sin(p2[X])+sin(p2[Y])+sin(p2[Z]))*g;
+                axis3=normalize(cos(p2[X]/g),sin(p2[Y]/g),sin(p2[Z]/g));
+                p3=     p2  + axis3*a3;  
+				
+				a4=(cos(p3[X])+cos(p3[Y])+cos(p3[Z])) *(g/4);
+                axis4=normalize(sin(p3[X]*g),cos(p3[Y]*g),cos((p3[Z]+p3[Y])*g)); 
+				p4=     p3 +axis4 *a4; 
+ 			 
+		        a5=(sin(p4[X])+sin(p4[Y])+sin(p4[Z]))*gs;
+                axis5=normalize(cos(p4[X]/g),sin(p4[Y]/g),sin(p4[Z]/g));
+                p5=     cross(p4  , axis5*a5);  
+				
+				a6=(cos(p5[X])+cos(p5[Y])+cos(p5[Z])) *(gs/4);
+                axis6=normalize(sin(p5[X]*g),cos(p5[Y]*g),cos((p5[Z]+p1[Y])*g)); 
+				p6=     cross(p5  , axis6*a6); 
+
+ 				outp=(p6[X],p6[Y],p6[Z] ,t);
+				in  f(outp)  ; 		
+				
+		i_turbulence u (f)(x,y,z,t) =
+		    let p=(x,y,z);
+			p6=p +( noise3d (p)  -(0.5,0.5,0.5))*u+( noise3d (p*4)  -(0.5,0.5,0.5))*u/4;
+      		outp=(p6[X],p6[Y],p6[Z] ,t);
+    
+		    in  f(outp)  ; 
+				   
+ 
+  /////////////////////////////////////////
 //cmaps 
  colour_pair  (colour1,colour2)t= (lerp(colour1,colour2,t));
  colour_trine  (colour1,colour2,colour3)t=let T=t*3 in 
@@ -222,14 +293,15 @@ my_bump (r) shape =
 //helper functions
 sgn(x)=if(x<0)-1 else 1;
 //   arandom (aseed) = mod(sin(dot((aseed,aseed), (12.9898,78.233)))*43758.5453123, 1);
-   arandom (aseed) =  mod(aseed*43758.5453123, 1);
+   arandom (aseed) = mod( mod(aseed*43758.5453123, 1)+aseed* 78.233 ,1);
 
    // value_at ((x,y,z),s) =arandom(arandom(arandom(x)+y)+z+s);
 vec3_at (x,y,z) =
 (
-arandom(arandom(arandom(x)+y)+z+2),
-arandom(arandom(arandom(x)+y)+z+5),
-arandom(arandom(arandom(x)+y)+z+9)
+arandom(arandom(arandom(arandom(x)+y)+z)),
+arandom(arandom(arandom(arandom(y)+z)+x)),
+arandom(arandom(arandom(arandom(z)+x)+y))
+
 );
 shiftifodd(x,y,z)=let 
 shiftx=if( abs(  mod(x,2))==1) 1/3 else 0; 
@@ -242,6 +314,14 @@ in
 (shiftz,0,0)
 ;
 step (a,v)= if (v<a)0 else 1;
+  
+  // gradient (p, d, shape) =
+    // let eps = 0.01;
+        // xd = shape.dist(p[X]+eps,p[Y],p[Z],p[T]);
+        // yd = shape.dist(p[X],p[Y]+eps,p[Z],p[T]);
+        // zd = shape.dist(p[X],p[Y],p[Z]+eps,p[T]);
+    // in (abs(d-xd),abs(d-yd),abs(d-zd)) / eps;
+	
 }
 
  

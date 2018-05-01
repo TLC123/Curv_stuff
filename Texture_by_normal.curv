@@ -1,0 +1,42 @@
+let 
+ include file "Textures.curv"; 
+
+	
+   Show_mm  shape =
+ 
+      make_shape {
+ 
+        dist p : shape.dist(p),
+        colour p :  let n= (
+		abs(  normalize(
+		 (shape.dist(p) - shape.dist(p+(0.01,0,0,0))  ) ,
+		 (shape.dist(p) - shape.dist(p+(0,0.01,0,0))   )  ,
+     	 (shape.dist(p) - shape.dist(p+(0,0,0.01,0)) ) ))); 
+		 in  min(cm(p[X]) +n[X],cm(p[Y])+n[Y],cm(p[Z])+n[Z] )*normalize(1,1,1)
+	    , 
+        // abs(  normalize(
+		// clamp(shape.dist(p) - (shape.dist(p+(0.01,0,0,0)) +shape.dist(p-(0.01,0,0,0)))/2,-1,1) ,
+		// clamp(shape.dist(p) - (shape.dist(p+(0,0.01,0,0)) +shape.dist(p-(0,0.01,0,0)))/2,-1,1)  ,
+     	// clamp(shape.dist(p) - (shape.dist(p+(0,0,0.01,0)) +shape.dist(p-(0,0,0.01,0)))/2,-1,1)  
+	// )   ) , 
+        bbox : shape.bbox,
+        is_2d : shape.is_2d,
+        is_3d : shape.is_3d,
+    };	
+	
+  
+  in
+ union( 
+ smooth 0.2 .union( 
+ union(
+	 ellipsoid (1,1.4,2) >>move(1,1,1)  ,
+	 cone  {d:1, h:2}>>move(-1,1,0.5), 
+	 cylinder  {d:1, h:1.5}>>move(1,-1,1), 
+	 demoshape>>scale 0.2>>reflect_x >>reflect_y>>move(-1,-1,1) 
+	 ), 
+   morph 0.75 (  sphere 2 , cube 1.45>>offset 0.05),
+   ),
+  torus  {major:4, minor:1}>>move(0,0,-1)
+ 
+ )
+ >> scale 10>> Show_mm
