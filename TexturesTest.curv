@@ -11,8 +11,8 @@ let
  
   union( 
  demoshape >>colour  c_noise3d,
-half_space {d:-10, normal: (0,0,1)}  >>   texture ( i_turbulence 2.5 ( i_noise3d 2 ) , colour_trine( Green,DarkBrown,DarkGreen) )   
-  )
+half_space {d:-10, normal: (0,0,1)}  >>   texture ( i_turbulence 2.5 ( i_noise3d 2 ) , colour_trine( Green,Brown,DarkGreen) )   
+  )>>my_bump 0.2
  
 // , demoshape >>   texture ( i_dotmixter 2 0.8 0, colour_tetrad( Brown,LightGreen,Green,SandyBrown) )  
   
