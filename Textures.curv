@@ -127,7 +127,7 @@ i_polar d (x,y,z,_) = let n=normalize(x,y,z)in   step (0.25,min(
   i_scale  d (f)(x,y,z,t) = let   p=(x/d,y/d,z/d, t) ;in f(p);
 
 ///////////////////////////////////////////////////
-i_noise3d d (x,y,z,_)= (noise3d (x,y,z))[X];
+i_noise3d d (x,y,z,_)= (noise3d ((x,y,z)/d))[X]; 
 c_noise3d  (x,y,z,_)= sRGB(noise3d (x,y,z));
 
  noise3d(x,y,z) = let 
@@ -261,6 +261,20 @@ i_swirl u (f)(x,y,z,t) =
 		    in  f(outp)  ; 
 				   
  
+  /////////////////////////////////////////				   
+    i_UB n(x,y,z,_) = 
+       let
+	      ni=(noise3d (x/3,10+y/3,0)-0.5)*1+(noise3d (x/11,y/11,2)-0.5)*2+(noise3d (10+x/19,y/19,0)-0.5)*4;
+	   px= (x+(ni[X]))/n;
+	   py= (y+(ni[Y]))/n;
+	   dice=vec3_at (floor(px),floor(py),0)[X]; 
+ 
+	   tilex=   mod(px,1) ;
+       tiley= if (dice > 0.5 ) mod(py,1) else 1-mod(py,1) ;
+	     
+	   in 
+	   step(1/10, abs(min((mag(tilex,tiley)-(1/2))	,(mag(tilex-1,tiley-1)-(1/2)))) )  ;
+	  
   /////////////////////////////////////////
 //cmaps 
  colour_pair  (colour1,colour2)t= (lerp(colour1,colour2,t));
@@ -295,7 +309,7 @@ sgn(x)=if(x<0)-1 else 1;
 //   arandom (aseed) = mod(sin(dot((aseed,aseed), (12.9898,78.233)))*43758.5453123, 1);
    arandom (aseed) = mod( mod(aseed*43758.5453123, 1)+aseed* 78.233 ,1);
 
-   // value_at ((x,y,z),s) =arandom(arandom(arandom(x)+y)+z+s);
+ value_at (x,y,z) =arandom(arandom(arandom(x)+y)+z);
 vec3_at (x,y,z) =
 (
 arandom(arandom(arandom(arandom(x)+y)+z)),

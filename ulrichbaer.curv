@@ -1,0 +1,7 @@
+//Ulrich Baer
+let 
+  include file "Textures.curv";
+
+  in
+
+everything >> texture ( i_UB 1  , colour_pair( [1,1,0],[0.125,1,0.125]) )  
