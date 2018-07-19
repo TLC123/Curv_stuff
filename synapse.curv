@@ -1,3 +1,5 @@
+// test of "synapse" blend function and some normal displacement textures
+
 let
   include file "Textures.curv";
  in
