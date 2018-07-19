@@ -1,0 +1,148 @@
+let
+  include file "Textures.curv";
+ in
+let
+ body = [
+[-5.00,0,0.00,0.4]
+,[-4.00,0,1.00,2]
+,[-2.00,0,2.00,4]
+,[0.00,0,2.00,6]
+,[3.00,0,2.00,4]
+,[4.00,0,1.00,1]
+,[7.00,0,4.00,3]
+,[9.00,0,5.00,4]
+,[12.00,0,4.00,1]
+,[14.00,0,4.00,4]
+,[15.00,0,2.00,2.4]
+,[15.00,0,0.00,0.15]
+];
+leg=[[0,0.00,0.00,0.5]
+,[0,2.00,-2.00,0.75]
+,[0,7.00,0.00,1]
+,[0,7.00,-6.00,0.75]
+,[0,9.00,-9.00,0.75]
+,[0,10.00,-9.50,0.5] ];
+v3 p=p[[X,Y,Z]]; 
+my_bump2 (r,g) shape =
+    make_shape {
+        dist p : let n= (
+		abs(  normalize(
+		 (shape.dist(p) - shape.dist(p+(0.01,0,0,0))  ) ,
+		 (shape.dist(p) - shape.dist(p+(0,0.01,0,0))   )  ,
+     	 (shape.dist(p) - shape.dist(p+(0,0,0.01,0)) ) )))*g
+		 ;
+		   
+		 in
+		 		shape.dist p + r* mag(noise3d(n[X],n[Y],n[Z]))
+			 ,
+        colour p : shape.colour p,
+        bbox : [shape.bbox[MIN]-r, shape.bbox[MAX]+r],
+        is_2d : shape.is_2d,
+        is_3d : shape.is_3d };
+
+
+my_bump3 (r,g) shape =
+    make_shape {
+        dist p : let 
+		   n2=normalize(p)*g ;
+		 in
+		 		shape.dist p + r* mag(noise3d(n2[X],abs(n2[Y]),n2[Z])),
+        colour p : shape.colour p,
+        bbox : [shape.bbox[MIN]-r, shape.bbox[MAX]+r],
+        is_2d : shape.is_2d,
+        is_3d : shape.is_3d };
+
+
+     synmin(a, b, r) =
+	 
+        let e =   max(0.002,(abs(a-b)/r) );
+        in min (a,b)- max(0.01,(r*e*0.75*(2.718^(1-(e*2.5 ))))/max(a,b)*0.5)
+ 
+	;
+synblend k (s1,s2) =
+    make_shape {
+        dist p : smin3(s1.dist p, s2.dist p,   k),
+        bbox : [ min(s1.bbox[MIN], s2.bbox[MIN] ),
+                 max(s1.bbox[MAX], s2.bbox[MAX] )],
+				         colour p :
+            let d1 = s1.dist p;
+                d2 = s2.dist p;
+            in if (d2 < 0.1 || d2 < d1) s2.colour p else s1.colour p,
+        is_2d : s1.is_2d && s2.is_2d  ,
+        is_3d : s1.is_3d && s2.is_3d  
+    };
+smin3(a,b, k) = synmin(a,b,k);
+
+ 
+    conecapsule ( p1 , p2 ) =
+    let a=lerp(p1[[X,Y,Z]],p2[[X,Y,Z]],0.1);
+	    b=lerp(p1[[X,Y,Z]],p2[[X,Y,Z]],0.9);
+		d1=p1[3];
+		d2=p2[3]*0.9;
+		ba = b - a;
+    in make_shape {	
+	      
+
+        dist p =
+            let 
+			pa = p[[X,Y,Z]] - a;
+			h = clamp(dot(pa,ba) / dot(ba,ba), 0, 1);
+			d=lerp(d1,d2,smoothstep(0,1,h));
+			r = d / 2; 
+            in mag(pa - ba*h) - r;
+        bbox = [min(a-max(d1,d2),b-max(d1,d2)), max(a+max(d1,d2),b+max(d1,d2))];
+        is_3d = true;
+    };
+bodypart=   synblend 0.2 (
+	union(conecapsule( body[0],body[1]),
+	      conecapsule( body[2],body[3]),
+		  conecapsule( body[4],body[5]),
+          conecapsule( body[6],body[7]),
+          conecapsule( body[8],body[9]),
+          conecapsule( body[10],body[11])
+		  ) ,
+	union(
+	conecapsule( body[1],body[2]),
+	conecapsule( body[3],body[4]),
+	conecapsule( body[5],body[6]),
+	conecapsule( body[7],body[8]),
+	conecapsule( body[9],body[10])
+	)
+		) ;
+		legpart=   synblend 0.2 (
+	union(conecapsule( leg[0],leg[1]),
+	      conecapsule( leg[2],leg[3]),
+		  conecapsule( leg[4],leg[5]) 
+		  ),
+	union(
+	conecapsule( leg[1],leg[2]),
+	conecapsule( leg[3],leg[4]) )
+	 
+		) ;
+		repeat_mirror_y shape =
+    make_shape {
+        dist(x,y,z,t) : shape.dist( x, abs y, z, t),
+        colour(x,y,z,t) : shape.colour(x,abs  y, z, t),
+        bbox : [
+            [shape.bbox[MIN,X], -shape.bbox[MAX,Y], shape.bbox[MIN,Z]],
+            shape.bbox[MAX],
+        ],
+        is_2d : shape.is_2d,
+        is_3d : shape.is_3d,
+    };
+		legasm= union( legpart >> scale(0.5)>>rotate {axis:[-1,0,1],angle:-60*deg}
+  >>translate(lerp(v3(body[6]),v3(body[5]) ,0.5) ),
+ legpart >>rotate {axis:[0,0,1],angle:-50*deg}
+  >>translate(lerp(v3(body[6]),v3(body[5]) ,0.5) ),
+ legpart >>rotate {axis:[1,0,0],angle:-10*deg}
+  >>translate(lerp(v3(body[6]),v3(body[5]) ,0.75) ),
+ legpart >>rotate {axis:[0.2,0,1],angle:50*deg}
+  >>translate(lerp(v3(body[5]),v3(body[4]) ,0.1) ) );
+in
+synblend 0.2 
+ (
+ bodypart >>my_bump2 (1, 3)>>my_bump2 (0.5, 8)
+ ,
+legasm>>my_bump2 (0.25, 4)
+)>>repeat_mirror_y 
+ 
